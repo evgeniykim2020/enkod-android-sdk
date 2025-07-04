@@ -53,6 +53,7 @@ import com.enkod.androidsdk.data.model.SessionIdResponse
 import com.enkod.androidsdk.data.model.SubscribeBody
 import com.enkod.androidsdk.data.model.UpdateTokenResponse
 import com.enkod.androidsdk.fcm.TokenAutoUpdate
+import com.enkod.androidsdk.fcm.UpdateFCM
 import com.enkod.androidsdk.utils.Preferences.ACCOUNT_TAG
 import com.enkod.androidsdk.utils.Preferences.DEV_TAG
 import com.enkod.androidsdk.utils.Preferences.MESSAGEID_TAG
@@ -106,6 +107,7 @@ import retrofit2.Converter
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import rx.android.BuildConfig
 import rx.subjects.BehaviorSubject
 import java.io.InputStream
 import java.lang.ref.WeakReference
@@ -119,6 +121,7 @@ import java.util.concurrent.TimeUnit
 object EnKodSDK {
 
     private const val baseUrl = "https://ext.enkod.ru/"
+    private const val debugUrl = "https://dev.ext.enkod.ru/"
 
     private const val chanelEnkod = "enkod_lib_1"
     private var isOnline = true
@@ -162,6 +165,7 @@ object EnKodSDK {
                 }
     )
 
+    var fcmToken = ""
 
     internal lateinit var retrofit: Api
     private lateinit var client: OkHttpClient
@@ -260,6 +264,50 @@ object EnKodSDK {
                 }
             }
         }
+    }
+
+    fun updateToken(context: Context, onUpdateToken: (String) -> Unit) {
+
+        UpdateFCM.updateFCMToken(context = context, onTokenUpdated = { onUpdateToken(it) })
+        makeToasts(context,"method updateToken")
+    }
+
+    fun saveTokenLocally(context: Context) {
+        val preferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+        preferences.edit() {
+            putString(TOKEN_TAG, fcmToken)
+        }
+        makeToasts(context, "saveTokenLocally")
+    }
+
+    internal fun checkTokenValidity(context: Context) {
+        account?.let {
+            retrofit.checkToken(it, fcmToken).enqueue(object : Callback<Boolean> {
+                override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                    makeToasts(context, "checkTokenValidity")
+                    when(response.body()) {
+                        true -> {
+                            logInfo("token valid")
+                        }
+                        false -> {
+                            logInfo("token not valid")
+                            updateToken(context, onUpdateToken = {})
+                        }
+                        null -> { logInfo("token validation check null") }
+                    }
+                }
+
+                override fun onFailure(call: Call<Boolean>, t: Throwable) {
+                    logInfo("token validation check failed")
+                }
+
+            })
+        }
+
+    }
+
+    private fun makeToasts(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     fun initSecondaryFirebaseApp(
@@ -1670,9 +1718,9 @@ object EnKodSDK {
                             dataFromPush
                         )
 
-                        if (preferencesTokenAutoUpdate == true) {
-                            TokenAutoUpdate.tokenUpdate(applicationContext)
-                        }
+//                        if (preferencesTokenAutoUpdate == true) {
+//                            TokenAutoUpdate.tokenUpdate(applicationContext)
+//                        }
 
 
                     }
@@ -1709,9 +1757,9 @@ object EnKodSDK {
                                         dataFromPush
                                     )
 
-                                    if (preferencesTokenAutoUpdate) {
-                                        TokenAutoUpdate.tokenUpdate(applicationContext)
-                                    }
+//                                    if (preferencesTokenAutoUpdate) {
+//                                        TokenAutoUpdate.tokenUpdate(applicationContext)
+//                                    }
 
                                 }
 
@@ -1724,9 +1772,9 @@ object EnKodSDK {
                                         dataFromPush
                                     )
 
-                                    if (preferencesTokenAutoUpdate) {
-                                        TokenAutoUpdate.tokenUpdate(applicationContext)
-                                    }
+//                                    if (preferencesTokenAutoUpdate) {
+//                                        TokenAutoUpdate.tokenUpdate(applicationContext)
+//                                    }
 
                                 }
 
@@ -1739,9 +1787,9 @@ object EnKodSDK {
                                         dataFromPush
                                     )
 
-                                    if (preferencesTokenAutoUpdate) {
-                                        TokenAutoUpdate.tokenUpdate(applicationContext)
-                                    }
+//                                    if (preferencesTokenAutoUpdate) {
+//                                        TokenAutoUpdate.tokenUpdate(applicationContext)
+//                                    }
                                 }
                             }
                         }
@@ -1759,9 +1807,9 @@ object EnKodSDK {
             } else {
                 managingTheNotificationCreationProcess(applicationContext, dataFromPush)
 
-                if (preferencesTokenAutoUpdate) {
-                    TokenAutoUpdate.tokenUpdate(applicationContext)
-                }
+//                if (preferencesTokenAutoUpdate) {
+//                    TokenAutoUpdate.tokenUpdate(applicationContext)
+//                }
             }
 
 

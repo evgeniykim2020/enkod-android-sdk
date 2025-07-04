@@ -14,13 +14,13 @@
         android:enabled="true"
         android:usesCleartextTraffic="true">
 
-        <service
-            android:name="com.enkod.androidsdk.fcm.TokenManualUpdateService"
-            android:directBootAware="true"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"
-            android:usesCleartextTraffic="true" />
+<!--        <service-->
+<!--            android:name="com.enkod.androidsdk.fcm.TokenManualUpdateService"-->
+<!--            android:directBootAware="true"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="false"-->
+<!--            android:foregroundServiceType="dataSync"-->
+<!--            android:usesCleartextTraffic="true" />-->
 
         <service
             android:name="com.enkod.androidsdk.common.InternetService"
